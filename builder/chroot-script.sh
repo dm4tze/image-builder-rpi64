@@ -115,6 +115,8 @@ echo "nameserver 8.8.8.8" > "${DEST}"
 # sed -i 's/deb http/deb [arch=arm64] http/g' /etc/apt/sources.list
 # sed -i 's/deb-src http/deb-src [arch=arm64] http/g' /etc/apt/sources.list
 
+dpkg --add-architecture amd64
+
 # reload package sources
 apt-get update
 apt-get upgrade -y
@@ -150,9 +152,10 @@ echo "dwc_otg.lpm_enable=0 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 cgro
 
 # create a default boot/config.txt file (details see http://elinux.org/RPiconfig)
 echo "
-# enable UART console on GPIO pins
+arm_64bit=1
+disable_commandline_tags=2
 enable_uart=1
-hdmi_force_hotplug=1
+armstub=RPI_EFI.fd
 " > boot/config.txt
 
 # echo "# camera settings, see http://elinux.org/RPiconfig#Camera
@@ -161,21 +164,21 @@ hdmi_force_hotplug=1
 # gpu_mem=128
 # " >> boot/config.txt
 
-echo "# setting for maximum memory, gpu_mem to minimum 16M, camera off
-start_x=0
-gpu_mem=16
-" >> boot/config.txt
+#echo "# setting for maximum memory, gpu_mem to minimum 16M, camera off
+#start_x=0
+#gpu_mem=16
+#" >> boot/config.txt
 
 # Add option for custom 64-bit kernel to boot/config.txt
-echo "
-[pi4]
-# Enable DRM VC4 V3D driver on top of the dispmanx display stack
-dtoverlay=vc4-fkms-v3d
-max_framebuffers=2
-arm_64bit=1
-# differentiate from Pi3 64-bit kernels
-kernel=kernel8-p4.img
-" >> boot/config.txt
+#echo "
+#[pi4]
+## Enable DRM VC4 V3D driver on top of the dispmanx display stack
+#dtoverlay=vc4-fkms-v3d
+#max_framebuffers=2
+#arm_64bit=1
+## differentiate from Pi3 64-bit kernels
+#kernel=kernel8-p4.img
+#" >> boot/config.txt
 
 # # /etc/modules
 # echo "snd_bcm2835
@@ -192,39 +195,50 @@ proc /proc proc defaults 0 0
 mv /sbin/init /sbin/init.bak
 ln -s /sbin/resizefs /sbin/init
 
-# as the Pi does not have a hardware clock we need a fake one
-apt-get install -y \
-  --no-install-recommends \
-  fake-hwclock
 
-# install packages for managing wireless interfaces
 apt-get install -y \
   --no-install-recommends \
+`# as the Pi does not have a hardware clock we need a fake one`\
+  fake-hwclock \
+`# arm64 kernel and grub`\
+  linux-image-arm64 \
+  grub-efi-arm64 \
+`# install packages for managing wireless interfaces`\
   wpasupplicant \
   wireless-tools \
   ethtool \
-  crda
+  crda \
+  \
+  bluetooth \
+  python3-pip \
+  python3-setuptools \
+  python3-wheel \
+  lsb-release
+
+  # ensure compatibility with Docker install.sh, so raspbian will be detected correctly
+  
+# install cloud-init and its required dependencies
+apt-get install -y \
+  --no-install-recommends \
+  -o Dpkg::Options::='--force-confdef' \
+  -o Dpkg::Options::='--force-confold' \
+  cloud-init \
+  dirmngr \
+  less
+
 
 # # add firmware and packages for managing bluetooth devices
 # apt-get install -y \
 #   --no-install-recommends \
 #   bluetooth \
 #   pi-bluetooth
-apt-get install -y \
-  --no-install-recommends \
-  bluetooth
 
-# ensure compatibility with Docker install.sh, so `raspbian` will be detected correctly
-apt-get install -y \
-  --no-install-recommends \
-  lsb-release
 
-# install cloud-init and its required dependencies
-apt-get install -y \
-  --no-install-recommends \
-  cloud-init \
-  dirmngr \
-  less
+# use old iptables
+update-alternatives --set iptables /usr/sbin/iptables-legacy
+update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+#update-alternatives --set arptables /usr/sbin/arptables-legacy
+#update-alternatives --set ebtables /usr/sbin/ebtables-legacy
 
 mkdir -p /var/lib/cloud/seed/nocloud-net
 ln -s /boot/user-data /var/lib/cloud/seed/nocloud-net/user-data
@@ -274,11 +288,7 @@ chmod +x /usr/local/bin/docker-machine
 curl -sSL "https://raw.githubusercontent.com/docker/machine/v${DOCKER_MACHINE_VERSION}/contrib/completion/bash/docker-machine.bash" -o /etc/bash_completion.d/docker-machine
 
 # install Docker Compose via pip
-apt-get install -y \
-  --no-install-recommends \
-  python
-curl -sSL https://bootstrap.pypa.io/get-pip.py | python
-pip install docker-compose=="${DOCKER_COMPOSE_VERSION}"
+pip3 install docker-compose=="${DOCKER_COMPOSE_VERSION}"
 
 # install bash completion for Docker Compose
 curl -sSL "https://raw.githubusercontent.com/docker/compose/${DOCKER_COMPOSE_VERSION}/contrib/completion/bash/docker-compose" -o /etc/bash_completion.d/docker-compose
@@ -286,6 +296,11 @@ curl -sSL "https://raw.githubusercontent.com/docker/compose/${DOCKER_COMPOSE_VER
 echo "Installing rpi-serial-console script"
 wget -q https://raw.githubusercontent.com/lurch/rpi-serial-console/master/rpi-serial-console -O usr/local/bin/rpi-serial-console
 chmod +x usr/local/bin/rpi-serial-console
+
+#setup grub
+#mkdir -p /boot/efi
+#grub-install --efi-directory=/boot/efi
+#update-grub
 
 # cleanup APT cache and lists
 apt-get clean

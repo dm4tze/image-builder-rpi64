@@ -6,10 +6,10 @@ build:
 	VERSION=${VERSION} docker build -t image-builder-rpi64 .
 
 sd-image: build
-	VERSION=${VERSION} docker run --rm --privileged -v $(shell pwd):/workspace -v /boot:/boot -v /lib/modules:/lib/modules -e CIRCLE_TAG -e VERSION image-builder-rpi64
+	VERSION=${VERSION} docker run --rm --privileged --cap-add ALL -v /dev:/dev -v $(shell pwd):/workspace -v /boot:/boot -v /lib/modules:/lib/modules -e CIRCLE_TAG -e VERSION image-builder-rpi64
 
 shell: build
-	VERSION=${VERSION} docker run -ti --privileged -v $(shell pwd):/workspace -v /boot:/boot -v /lib/modules:/lib/modules -e CIRCLE_TAG -e VERSION image-builder-rpi64 bash
+	VERSION=${VERSION} docker run -ti --privileged --cap-add ALL -v /dev:/dev -v $(shell pwd):/workspace -v /boot:/boot -v /lib/modules:/lib/modules -e CIRCLE_TAG -e VERSION image-builder-rpi64 bash
 
 test:
 	VERSION=${VERSION} docker run --rm --privileged -v $(shell pwd):/workspace -v /boot:/boot -v /lib/modules:/lib/modules -e CIRCLE_TAG -e VERSION image-builder-rpi64 bash -c "unzip /workspace/hypriotos-rpi64-${VERSION}.img.zip && rspec --format documentation --color /workspace/builder/test/*_spec.rb"

@@ -61,7 +61,7 @@ if [ ! -f "$FILENAME" ]; then
     exit 255
   fi
 fi
-tar -xf "$FILENAME" -C "${BUILD_PATH}"
+#tar -xf "$FILENAME" -C "${BUILD_PATH}"
 
 FILENAME=/workspace/$KERNEL_ARTIFACT
 if [ ! -f "$FILENAME" ]; then
@@ -73,7 +73,7 @@ if [ ! -f "$FILENAME" ]; then
     exit 255
   fi
 fi
-tar -xf "$FILENAME" -C "${BUILD_PATH}"
+#tar -xf "$FILENAME" -C "${BUILD_PATH}"
 
 # Add RPI4 Kernel
 FILENAME=/workspace/$RPI4_KERNEL_ARTIFACT
@@ -85,7 +85,18 @@ if [ ! -f "$FILENAME" ]; then
     exit 255
   fi
 fi
-tar -xJf "$FILENAME" -C "${BUILD_PATH}"
+#tar -xJf "$FILENAME" -C "${BUILD_PATH}"
+
+FILENAME=/workspace/RPi3_UEFI_Firmware_v1.18.zip
+if [ ! -f "$FILENAME" ]; then
+  if [ "$FETCH_MISSING_ARTIFACTS" == "true" ]; then
+    fetch --repo="https://github.com/pbatard/RPi3" --tag="v1.18" --release-asset="RPi3_UEFI_Firmware_v1.18.zip" /workspace
+  else
+    echo "Missing artifact ${KERNEL_ARTIFACT}"
+    exit 255
+  fi
+fi
+unzip "$FILENAME" -d "${BUILD_PATH}/boot"
 
 # register qemu-aarch64 with binfmt
 # to ensure that binaries we use in the chroot
@@ -153,8 +164,31 @@ guestfish -a "/${HYPRIOT_IMAGE_NAME}"<<_EOF_
   mkdir /boot
   mount /dev/sda1 /boot
   tar-in /image_with_kernel_boot.tar.gz /boot compress:gzip
+  #sh "grub-install --removable --efi-directory=/boot --boot-directory=/boot --modules=fat  --target=arm64-efi /dev/sda1"
+  #sh "grub-install --efi-directory=/boot"
 _EOF_
 
+dpkg --add-architecture arm64
+apt-get update
+apt-get install  -y \
+  --no-install-recommends\
+  grub-efi-arm64-bin grub-common
+mkdir -p /myboot/efi
+#mount -o loop,offset=1048576 /hypriotos-rpi64-dirty.img /myboot/
+losetup -P /dev/loop0 /hypriotos-rpi64-dirty.img
+mount /dev/loop0p1 /myboot/
+grub-install --removable --efi-directory=/myboot --boot-directory=/myboot --modules=fat  --target=arm64-efi /dev/loop0
+#search --set=root --label root --hint hd0,msdos2
+echo "
+set default="0"
+set timeout=5
+menuentry "Debian" {
+          linux /vmlinuz-4.19.0-8-arm64 root=/dev/mmcblk0p2
+          initrd /initrd.img-4.19.0-8-arm64
+} 
+" > /myboot/grub/grub.cfg
+umount /myboot
+losetup -d /dev/loop0
 # ensure that the travis-ci user can access the sd-card image file
 umask 0000
 

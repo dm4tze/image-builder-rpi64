@@ -1,7 +1,8 @@
 # image-builder-rpi64
 [![CircleCI](https://circleci.com/gh/DieterReuter/image-builder-rpi64.svg?style=svg)](https://circleci.com/gh/DieterReuter/image-builder-rpi64)
 
-This repo builds the SD card image with HypriotOS for the Raspberry Pi 3/4 in 64bit.
+This repo builds the SD card image with HypriotOS based on Debian for the Raspberry Pi 3 in 64bit.
+It uses the vanilla debian kernel and boots via UEFI and grub.
 You can find released versions of the SD card image here in the GitHub
 releases page. To build this SD card image we have to
 
