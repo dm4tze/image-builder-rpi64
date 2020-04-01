@@ -201,6 +201,7 @@ apt-get install -y \
 `# as the Pi does not have a hardware clock we need a fake one`\
   fake-hwclock \
 `# arm64 kernel and grub`\
+  firmware-realtek \
   linux-image-arm64 \
   grub-efi-arm64 \
 `# install packages for managing wireless interfaces`\
@@ -233,6 +234,9 @@ apt-get install -y \
 #   bluetooth \
 #   pi-bluetooth
 
+#disable "Predictable Network Interface Names" 
+# eth0 will get enx<MAC> if activated
+rm /lib/udev/rules.d/73-usb-net-by-mac.rules
 
 # use old iptables
 update-alternatives --set iptables /usr/sbin/iptables-legacy
