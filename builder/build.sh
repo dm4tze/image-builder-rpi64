@@ -175,9 +175,10 @@ apt-get install  -y \
   grub-efi-arm64-bin grub-common
 mkdir -p /myboot/efi
 #mount -o loop,offset=1048576 /hypriotos-rpi64-dirty.img /myboot/
-losetup -P /dev/loop0 /hypriotos-rpi64-dirty.img
-mount /dev/loop0p1 /myboot/
-grub-install --removable --efi-directory=/myboot --boot-directory=/myboot --modules=fat  --target=arm64-efi /dev/loop0
+freeloop=`losetup -f`
+losetup -P $freeloop /hypriotos-rpi64-dirty.img
+mount ${freeloop}p1 /myboot/
+grub-install --removable --efi-directory=/myboot --boot-directory=/myboot --modules=fat  --target=arm64-efi $freeloop
 #search --set=root --label root --hint hd0,msdos2
 echo "
 set default="0"
@@ -188,7 +189,7 @@ menuentry "Debian" {
 } 
 " > /myboot/grub/grub.cfg
 umount /myboot
-losetup -d /dev/loop0
+losetup -d $freeloop
 # ensure that the travis-ci user can access the sd-card image file
 umask 0000
 
