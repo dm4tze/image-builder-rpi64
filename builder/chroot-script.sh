@@ -201,7 +201,6 @@ apt-get install -y \
 `# as the Pi does not have a hardware clock we need a fake one`\
   fake-hwclock \
 `# arm64 kernel and grub`\
-  firmware-realtek \
   linux-image-arm64 \
   grub-efi-arm64 \
 `# install packages for managing wireless interfaces`\

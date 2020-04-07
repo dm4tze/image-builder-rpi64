@@ -87,16 +87,28 @@ if [ ! -f "$FILENAME" ]; then
 fi
 #tar -xJf "$FILENAME" -C "${BUILD_PATH}"
 
-FILENAME=/workspace/RPi3_UEFI_Firmware_v1.18.zip
+FILENAME=/workspace/RPi3_UEFI_Firmware_v1.19.zip
 if [ ! -f "$FILENAME" ]; then
   if [ "$FETCH_MISSING_ARTIFACTS" == "true" ]; then
-    fetch --repo="https://github.com/pbatard/RPi3" --tag="v1.18" --release-asset="RPi3_UEFI_Firmware_v1.18.zip" /workspace
+    fetch --repo="https://github.com/pftf/RPi3" --tag="v1.19" --release-asset="RPi3_UEFI_Firmware_v1.19.zip" /workspace
   else
     echo "Missing artifact ${KERNEL_ARTIFACT}"
     exit 255
   fi
 fi
 unzip "$FILENAME" -d "${BUILD_PATH}/boot"
+
+
+FILENAME=/workspace/RPi4_UEFI_Firmware_v1.7.zip
+if [ ! -f "$FILENAME" ]; then
+  if [ "$FETCH_MISSING_ARTIFACTS" == "true" ]; then
+    fetch --repo="https://github.com/pftf/RPi4" --tag="v1.7" --release-asset="RPi4_UEFI_Firmware_v1.7.zip" /workspace
+  else
+    echo "Missing artifact ${KERNEL_ARTIFACT}"
+    exit 255
+  fi
+fi
+#unzip "$FILENAME" -d "${BUILD_PATH}/boot"
 
 # register qemu-aarch64 with binfmt
 # to ensure that binaries we use in the chroot

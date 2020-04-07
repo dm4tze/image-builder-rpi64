@@ -1,7 +1,7 @@
 FROM hypriot/image-builder:latest
 
-ENV HYPRIOT_OS_VERSION=dirty \
-    RAW_IMAGE_VERSION=v0.3.2
+ENV HYPRIOT_OS_VERSION=v2.2.1 \
+    RAW_IMAGE_VERSION=v0.4.1
 
 #Note that the checksums and build timestamps only apply when fetching missing
 #artifacts remotely is enabled to validate downloaded remote artifacts
@@ -16,8 +16,8 @@ ENV FETCH_MISSING_ARTIFACTS=true \
     DOCKER_COMPOSE_VERSION="1.23.1" \
     DOCKER_MACHINE_VERSION="0.16.2" \
     KERNEL_VERSION="4.19.58" \
-    ROOTFS_TAR_CHECKSUM="6b05700238db954ab44e37e66694478ec0686dd9b32488e1bb7f6564dcddffc1" \
-    RAW_IMAGE_CHECKSUM="d598e20fe0d5514ffd5ee6d6745b837e4df11437e3e75b11351b475102fba297" \
+    ROOTFS_TAR_CHECKSUM="4745a25a294ac997db2a4ef9c190857178c3708f2af576258a28e197356e3ce7" \
+    RAW_IMAGE_CHECKSUM="71ce87f41e43cf1a22b82eb628fc2c6a4695ba2348bbc1f7014f9d4f61300097" \
     BOOTLOADER_BUILD="20190713-140339" \
     KERNEL_BUILD="20190715-111025" \
     RPI4_KERNEL_BUILD="4.19.102.20200211"
@@ -31,7 +31,7 @@ RUN apt-get update && \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-ADD https://github.com/gruntwork-io/fetch/releases/download/v0.1.0/fetch_linux_amd64 /usr/local/bin/fetch
+ADD https://github.com/gruntwork-io/fetch/releases/download/v0.3.7/fetch_linux_amd64 /usr/local/bin/fetch
 RUN chmod +x /usr/local/bin/fetch
 
 COPY builder/ /builder/
